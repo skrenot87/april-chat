@@ -5,10 +5,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import ru.geekbrains.april.chat.client.history.HistoryMessage;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -81,6 +80,10 @@ public class HelloController implements Initializable {
                         String message = in.readUTF();
                         if (message.startsWith("/login_ok ")) {
                             setUsername(message.split("\\s")[1]);
+                            /**
+                             * загружаем исторю пользователя после авторизации
+                             */
+                            HistoryMessage.loadHistory(username, msgArea);
                             break;
                         }
                         if (message.startsWith("/login_failed ")) {
@@ -110,7 +113,12 @@ public class HelloController implements Initializable {
                             continue;
 
                         }
+                        /**
+                         * * Формируем и сохраняем исторю сообщение за пользователем
+                         */
+                        HistoryMessage.saveHistory(username, msgArea.getText());
                         msgArea.appendText(message + "\n");
+
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -121,6 +129,7 @@ public class HelloController implements Initializable {
             thread.start();
         } catch (IOException e) {
             showErrorAlert("Невозможно подключиться к серверу");
+
         }
     }
 
