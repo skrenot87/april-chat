@@ -1,5 +1,8 @@
 package ru.geekbrains.april.chat.server;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,11 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
-
+    private static final Logger log = LogManager.getLogger(Server.class);
     private int port;
     private List<ClientHandler> clients;
-      private AuthenticationProvider authenticationProvider;
-   // private DbAuthenticationProvider authenticationProvider;
+    private AuthenticationProvider authenticationProvider;
+    // private DbAuthenticationProvider authenticationProvider;
 
     public AuthenticationProvider getAuthenticationProvider() {
         return authenticationProvider;
@@ -22,11 +25,14 @@ public class Server {
         this.clients = new ArrayList<>();
         this.authenticationProvider = new DbAuthenticationProvider();
         this.authenticationProvider.init();
-      //  this.authenticationProvider = new DbAuthenticationProvider();
+        //  this.authenticationProvider = new DbAuthenticationProvider();
 
-     //   this.authenticationProvider.connect();
+        //   this.authenticationProvider.connect();
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
+//
+            log.info("Сервер запущен");
+
             System.out.println("Сервер запущен на порту " + port);
             while (true) {
                 System.out.println("Ждем нового клиента..");
@@ -35,15 +41,21 @@ public class Server {
                 new ClientHandler(this, socket);
             }
         } catch (IOException e) {
+//
+            log.throwing(e);
+//
             e.printStackTrace();
         } finally {
             this.authenticationProvider.shutdown();
-          //  DbAuthenticationProvider.disconnect();
+            //  DbAuthenticationProvider.disconnect();
         }
     }
 
     public synchronized void subscribe(ClientHandler clientHandler) {
         clients.add(clientHandler);
+//
+        log.info("Клиент " + clientHandler.getUsername() + " подключился");
+//
         broadcastMessage("Клиент " + clientHandler.getUsername() + " вошел в чат");
         broadcastClientsList();
 
@@ -56,7 +68,11 @@ public class Server {
     }
 
     public synchronized void broadcastMessage(String message) {
+
         for (ClientHandler clientHandler : clients) {
+//
+            log.info("Клиент прислал сообщение/команду");
+//
             clientHandler.sendMessage(message);
         }
     }
